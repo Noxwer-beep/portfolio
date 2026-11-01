@@ -3,6 +3,8 @@
 A single-page portfolio: dark-first, one accent, no framework, no build step.
 Open `index.html` in a browser and it works.
 
+**Live:** <https://noxwer-beep.github.io/portfolio/> · **Repo:** <https://github.com/Noxwer-beep/portfolio>
+
     portfolio/
     ├── index.html          all content lives here
     ├── vantage.html        case study: the Vantage scanner
@@ -43,8 +45,8 @@ Still to fill in when available:
 
 1. **Hack The Box profile** — the contact link points at `https://www.hackthebox.com/`.
    Swap in your public profile URL (`https://app.hackthebox.com/profile/…`).
-2. **GitHub / LinkedIn** — commented out in the contact `<ul>`. Uncomment and set
-   the URLs once the profiles exist.
+2. **LinkedIn** — still commented out in the contact `<ul>`. GitHub is live:
+   `https://github.com/Noxwer-beep`.
 3. **A CV** — no download link is wired up. If you add `assets/cv.pdf`, add a
    `Download CV` button in `.hero-actions`.
 4. **`og:url`** — still `https://example.com`; set it to the live domain, and add an
