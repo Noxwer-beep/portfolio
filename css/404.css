@@ -1,0 +1,97 @@
+/* 404 page — same tokens as the main site, served by nginx error_page. */
+
+:root {
+  --bg: #0a0b0c;
+  --ink: #f1f2ed;
+  --muted: #767c78;
+  --line: rgba(241, 242, 237, 0.11);
+  --accent: #c9f24d;
+  --font-sans: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+main { width: min(640px, 100%); }
+
+.cat { width: 52px; height: 52px; display: block; margin-bottom: 2rem; }
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+.code::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: var(--accent);
+}
+
+h1 {
+  font-size: clamp(2.25rem, 7vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+h1 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+p {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+  max-width: 42ch;
+}
+
+a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.7rem 1.15rem;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+a:hover { background: var(--accent); color: var(--bg); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.path {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+  word-break: break-all;
+}

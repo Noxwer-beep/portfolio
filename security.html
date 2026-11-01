@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security check — Maximilian Jatzkowski</title>
+<meta name="description" content="A live, client-side audit of this site's own security posture.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/security.css">
+<script src="js/head.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="./" aria-label="Back to the homepage">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/security</span>
+    </a>
+    <div class="head-meta">
+      <a class="back" href="./">← back to the site</a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="wrap sec-hero">
+    <p class="eyebrow"><span class="tick" aria-hidden="true"></span>Runtime audit</p>
+    <h1 class="display">Security <em>check</em></h1>
+    <p class="lead">
+      This page audits the site it is running on, from inside your browser: the headers
+      the server actually sent, what this document loaded, and what it stored. Nothing
+      is sent anywhere — there is no backend to send it to.
+    </p>
+
+    <div class="verdict" id="verdict" aria-live="polite">
+      <span class="verdict-count">—</span>
+      <span class="verdict-label">running checks…</span>
+    </div>
+  </section>
+
+  <section class="wrap sec-body">
+    <div class="checks" id="checks"></div>
+
+    <div class="limits">
+      <p class="index"><span>Note</span>What this page cannot see</p>
+      <p>
+        A browser cannot inspect the TLS certificate chain, HSTS state, firewall rules,
+        rate limits or the contents of the server. Those were verified out of band with
+        <span class="mono">curl</span>, <span class="mono">openssl</span> and
+        <span class="mono">nmap</span>; the results live in the README rather than in
+        a marketing badge. What you see below is measured, not claimed.
+      </p>
+      <p class="mono limits-foot">
+        <a href="./">← homepage</a> · <a href=".well-known/security.txt">security.txt</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono">Checked in your browser · nothing leaves this page</p>
+    <p class="mono"><a href="./">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<script src="js/security.js" defer></script>
+</body>
+</html>

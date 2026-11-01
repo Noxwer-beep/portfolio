@@ -1,0 +1,8 @@
+# local preview + databases
+*.db
+*.db-wal
+*.db-shm
+
+# OS cruft
+.DS_Store
+Thumbs.db

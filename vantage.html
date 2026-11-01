@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vantage — authorized security scanning · Maximilian Jatzkowski</title>
+<meta name="description" content="Vantage is a scope-enforced network scanner and vulnerability triage tool: nmap, nikto, whatweb and TLS inspection behind an authorisation gate, with reports that separate confirmed findings from guesses.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vantage — authorized security scanning">
+<meta property="og:description" content="A pentest scanner that refuses to guess: scope enforcement, confidence levels, and reports you can defend.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Security tooling · 2026</p>
+
+      <h1 class="display"><em>Vantage</em></h1>
+
+      <p class="lead">
+        A network scanner and vulnerability triage tool for engagements you are
+        actually authorised to run. It wraps nmap, nikto, whatweb and TLS
+        inspection behind a scope guard, then argues with itself about what the
+        evidence proves — so the report says <span class="name">confirmed</span>
+        only when something was confirmed.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Type</dt><dd>CLI + local web app</dd></div>
+      <div><dt>Stack</dt><dd>Python · nmap · Flask</dd></div>
+      <div><dt>Surface</dt><dd>Terminal &amp; browser</dd></div>
+      <div><dt>Tests</dt><dd>129, stdlib only</dd></div>
+      <div><dt>Status</dt><dd>Working, in use on my lab</dd></div>
+      <div><dt>Docs</dt><dd>6 documents + in-app help</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>The problem I had</h3>
+        <p>
+          I was running nmap by hand, pasting output into notes, and each report
+          came out with the same flaw: a list of observations with no way to tell
+          which ones were real. <em>OpenSSH 7.2</em> is not a vulnerability. A
+          nikto line about a missing header is not a vulnerability either — nikto
+          says that about almost everything.
+        </p>
+        <p>
+          Worse, the tooling encouraged bad habits. Default nmap script runs are
+          loud, <code>--script-args unsafe=1</code> can wedge embedded devices, and
+          nothing stops a typo in a CIDR from becoming <code>/8</code> aimed at
+          someone else's network. I wanted a tool where the careless path was
+          harder than the careful one.
+        </p>
+
+        <h3><span class="num">02</span>What it does</h3>
+        <p>
+          Seven phases, each one optional and each one recorded, so the report can
+          say what was <em>not</em> looked at:
+        </p>
+        <table class="pj-table">
+          <thead>
+            <tr><th>Phase</th><th>Runs</th><th>Produces</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Discovery</td><td><code>nmap -sn</code></td><td>Which addresses answer at all</td></tr>
+            <tr><td>Ports</td><td><code>nmap -sT / -sS</code></td><td>Open TCP ports with state and reason</td></tr>
+            <tr><td>Services</td><td><code>nmap -sV</code></td><td>Product, version, banner per port</td></tr>
+            <tr><td>Vulnerabilities</td><td><code>nmap --script vuln</code></td><td>NSE results, graded by the answer given</td></tr>
+            <tr><td>Web</td><td>whatweb, nikto</td><td>Stack fingerprint, headers, exposed files</td></tr>
+            <tr><td>TLS</td><td>openssl s_client</td><td>Cert validity, trust, hostname, TLS 1.0/1.1</td></tr>
+            <tr><td>Analysis</td><td>built in</td><td>Findings with severity, confidence, fix</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code"><span class="dim">$</span> <span class="hl">vantage scan 192.168.1.0/24 --scope homelab.json --authorized</span>
+
+<span class="hl">▸ 1/6</span> Host discovery
+  <span class="ok">✓</span> <span class="dim">14 host(s) up</span>
+<span class="hl">▸ 2/6</span> Port scan
+  <span class="ok">✓</span> <span class="dim">37 open port(s) on 9 host(s)</span>
+<span class="hl">▸ 3/6</span> Service &amp; version detection
+  <span class="ok">✓</span> <span class="dim">banners collected</span>
+<span class="hl">▸ 4/6</span> Vulnerability scripts (NSE)
+  <span class="ok">✓</span> <span class="dim">NSE checks complete</span>
+<span class="hl">▸ 5/6</span> Web surface review
+  <span class="ok">✓</span> <span class="dim">3 endpoint(s)</span>
+<span class="hl">▸ 6/6</span> TLS inspection
+  <span class="ok">✓</span> <span class="dim">2 endpoint(s)</span>
+
+<span class="dim">╭──────────── result ─────────────╮</span>
+<span class="dim">│</span>      risk   <span class="warn">64/100</span>              <span class="dim">│</span>
+<span class="dim">│</span>     grade   high                <span class="dim">│</span>
+<span class="dim">│</span>  findings   1 critical · 3 high <span class="dim">│</span>
+<span class="dim">│</span> confirmed   4                   <span class="dim">│</span>
+<span class="dim">╰─────────────────────────────────╯</span></div>
+
+        <h3><span class="num">03</span>The part that matters: confidence</h3>
+        <p>
+          Every finding carries two independent axes. <strong>Severity</strong> is
+          how bad it would be if true. <strong>Confidence</strong> is how sure this
+          scan is that it <em>is</em> true. Collapsing them is what makes security
+          reports untrustworthy, and it is the one thing this tool refuses to do.
+        </p>
+        <table class="pj-table">
+          <thead><tr><th>Confidence</th><th>Means</th><th>Comes from</th></tr></thead>
+          <tbody>
+            <tr><td>confirmed</td><td>A check returned a positive answer</td><td>NSE <code>State: VULNERABLE</code>, a completed TLS 1.0 handshake, an open port</td></tr>
+            <tr><td>likely</td><td>Strong signal, one manual step away</td><td><code>State: LIKELY VULNERABLE</code>, certificate mismatch heuristics</td></tr>
+            <tr><td>possible</td><td>Heuristic hit, verify before acting</td><td>All nikto output, end-of-life banners</td></tr>
+            <tr><td>informational</td><td>Context, not a weakness</td><td>Server banners, technology fingerprints</td></tr>
+          </tbody>
+        </table>
+
+        <figure class="figure">
+          <img src="assets/vantage-findings.png" width="1280" height="577" loading="lazy"
+               alt="Vantage report showing three findings with severity, confidence, raw evidence, an explanation and a remediation step">
+          <figcaption>Report output — severity and confidence sit side by side, evidence above the reasoning.</figcaption>
+        </figure>
+        <p>
+          Concretely: a version banner never produces "vulnerable". It produces
+          <em>possible</em>, with a sentence explaining that distributors backport
+          fixes without changing the number. <code>State: NOT VULNERABLE</code> and
+          script errors produce no finding at all — a check that did not answer has
+          not told us anything.
+        </p>
+
+        <h3><span class="num">04</span>The guard</h3>
+        <p>
+          Scanning systems you do not own is a criminal offence in Germany (§202a–c
+          StGB) and most other places, and "it was only a scan" is not a defence. So
+          the tool is built around a gate it cannot be talked out of:
+        </p>
+        <ul>
+          <li>No <code>--authorized</code> statement means no scan — non-interactive
+            runs exit with code 2 instead of proceeding.</li>
+          <li>A declared scope is enforced on the <em>resolved</em> address, so DNS
+            cannot smuggle a target past it. Out of scope is refused before a packet
+            leaves the machine.</li>
+          <li>Public addresses are refused unless explicitly allowed; ranges above a
+            host ceiling are refused so a typo cannot become an incident.</li>
+          <li>Every decision — authorised <em>and</em> refused — is appended to a
+            local audit log with operator, target, scope fingerprint and statement.</li>
+        </ul>
+        <p>
+          A <code>Guard</code> object is the only thing the scanning engine accepts,
+          and it can only be produced by the gate. There is no bypass path to
+          remember to close later.
+        </p>
+
+        <div class="callout">
+          <span class="tag">Deliberate limits</span>
+          <p>
+            No credentials, no exploitation, no evasion, no <code>unsafe=1</code>.
+            The tool reports reachability and posture; it does not break in. That is
+            a design constraint, not a backlog item.
+          </p>
+        </div>
+
+        <h3><span class="num">05</span>Two front ends, one engine</h3>
+        <p>
+          The CLI is the primary interface — rich tables, streaming phase output,
+          <code>--json</code> for pipelines and <code>--fail-on high</code> to gate
+          CI. The web console exists for the case where someone else should be able
+          to read the result without a terminal: same engine, same scope checks, one
+          background thread per scan and a polling endpoint, no websockets and no
+          frontend build step.
+        </p>
+        <p>
+          Both produce the same artefacts: a self-contained HTML report, a Markdown
+          one for notes, JSON for tooling, all stored in SQLite so history is
+          queryable months later.
+        </p>
+
+        <figure class="figure">
+          <img src="assets/vantage-report.png" width="1280" height="577" loading="lazy"
+               alt="Top of a Vantage HTML report: target, scan metadata, scope fingerprint, risk score of 30 and severity counts">
+          <figcaption>Every report carries the scope, its fingerprint and the authorisation statement that produced it.</figcaption>
+        </figure>
+
+        <h3><span class="num">06</span>Strategies: one engine, nine questions</h3>
+        <p>
+          The first version had three profiles — quick, standard, deep — which is a
+          dial, not a decision. Real work starts with a question, and the question
+          picks the toolset: <em>who is alive?</em> wants discovery and nothing else;
+          <em>are my certificates in order?</em> wants TLS and nothing else;
+          <em>is my web app exposing itself?</em> wants headers, nikto and a
+          certificate.
+        </p>
+        <p>
+          So a strategy is now a named <strong>phase list</strong>, and nothing else.
+          That constraint is what keeps it honest: a strategy cannot describe a phase
+          it will not run, and <code>--only web,tls</code> or <code>--no-vuln</code>
+          edit the same list instead of toggling independent flags that drift apart
+          over time.
+        </p>
+        <table class="pj-table">
+          <thead><tr><th>Strategy</th><th>Runs</th><th>Answers</th></tr></thead>
+          <tbody>
+            <tr><td>discover</td><td>host discovery only</td><td>Which addresses answer at all?</td></tr>
+            <tr><td>quick</td><td>top 100 ports, versions</td><td>What is this host, roughly?</td></tr>
+            <tr><td>gentle</td><td>same, <code>-T2</code>, one host at a time</td><td>Will this survive a scan?</td></tr>
+            <tr><td>inventory</td><td>top 1000 ports, versions</td><td>What runs where?</td></tr>
+            <tr><td>hardening</td><td>+ TLS</td><td>Are certificates and protocols in order?</td></tr>
+            <tr><td>web</td><td>+ nikto, whatweb, TLS</td><td>Is the HTTP surface exposing itself?</td></tr>
+            <tr><td>vuln</td><td>+ NSE vulnerability scripts</td><td>Is this known-vulnerable?</td></tr>
+            <tr><td>standard</td><td>everything</td><td>The full picture</td></tr>
+            <tr><td>deep</td><td>all 65535 ports</td><td>What is it hiding?</td></tr>
+          </tbody>
+        </table>
+
+        <h3><span class="num">07</span>Watching it happen</h3>
+        <p>
+          A scanner that prints nothing for four minutes feels broken. The CLI now
+          redraws a dashboard in place: progress bar, phase timeline with per-phase
+          durations, hosts and ports counted as nmap reports them, the last three
+          findings, and the most recent tool message. The web console streams the
+          same telemetry — counters, phase rows, and an asset feed filling with
+          <code>host:port</code> chips while the scan runs.
+        </p>
+        <p>
+          That feature found a real bug that had been there all along: I had been
+          sending nmap's XML to stdout with <code>-oX -</code>, which makes nmap
+          suppress every progress line. The scan was correct, the telemetry was
+          silently dead, and nothing failed. Switching the XML to a temporary file
+          restored the stream — and taught me that "it produced results" is not the
+          same as "it did what I asked".
+        </p>
+        <p>
+          The same data makes change tracking possible: findings carry a stable key,
+          so two scans of the same target line up entry for entry. Comparing them
+          answers the question a report never can — <em>did anything change since
+          last week?</em>
+        </p>
+
+        <figure class="figure">
+          <img src="assets/vantage-diff.png" width="1280" height="577" loading="lazy"
+               alt="Vantage diff page: risk fell from 30 to 28, zero new findings, 17 resolved, 2 still present, 4 closed ports">
+          <figcaption>Diff between two scans: new, resolved, changed, and which ports opened or closed.</figcaption>
+        </figure>
+
+        <h3><span class="num">08</span>What I got wrong first</h3>
+        <p>
+          The first scoring model added up severity weights on a log curve. It rated
+          twenty low findings identically to one confirmed critical — a real bug my
+          own test suite caught. The fix was a per-finding floor: one confirmed
+          critical now scores 82 on its own, because those two situations are not the
+          same risk and a reader should not have to hold that in their head.
+        </p>
+        <p>
+          The second lesson was about timeouts. <code>--script-timeout</code> is
+          per-script, per-port, so a careless value turns a two-minute scan into
+          twenty. It is now 90 seconds, and the profile estimates in the docs were
+          rewritten to match what I measured rather than what I assumed.
+        </p>
+
+        <h3><span class="num">09</span>What's next</h3>
+        <ul>
+          <li>UDP coverage — SNMP and mDNS are still invisible to it.</li>
+          <li>A verifier step that re-checks a finding before it is promoted from
+            <em>possible</em> to <em>confirmed</em>.</li>
+          <li>Scheduled scanning with the diff as the delivery mechanism: scan
+            nightly, report only what changed.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Try it locally</span>
+          <p>
+            It runs from a checkout with no install:
+            <code>./vantage.py scan 127.0.0.1 --authorized</code> — or
+            <code>./vantage.py doctor</code> to check which tools are present.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="index.html#work">← All work</a>
+          <a class="next" href="index.html#contact">Get in touch →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Project facts">
+        <h4>Responsibilities</h4>
+        <ul>
+          <li><b>Design</b>Authorisation model, finding schema, report structure</li>
+          <li><b>Engineering</b>nmap XML parsing, phase orchestration, Flask job runner</li>
+          <li><b>Writing</b>Six documents plus the in-app reference</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Notable details</h4>
+        <ul>
+          <li><b>No new dependencies</b>Stdlib, plus rich and flask</li>
+          <li><b>Own XML parser</b>~80 lines instead of a wrapper library</li>
+          <li><b>Nine strategies</b>Each one a phase list, nothing more</li>
+          <li><b>Live telemetry</b>Phase timeline, counters, asset stream</li>
+          <li><b>Confidence model</b>Four levels, each with a written rule</li>
+          <li><b>Audit trail</b>JSONL, refusals included</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Read the docs</h4>
+        <ul>
+          <li><b>Architecture</b>The five decisions and why</li>
+          <li><b>Findings</b>Every grading rule, spelled out</li>
+          <li><b>Legal</b>Scope, authorisation, audit</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/>
+      <path d="M33 40v11"/>
+      <path d="M56 40v11"/>
+      <path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
