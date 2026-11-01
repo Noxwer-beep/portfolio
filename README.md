@@ -8,6 +8,8 @@ Open `index.html` in a browser and it works.
     portfolio/
     ├── index.html          all content lives here
     ├── vantage.html        case study: the Vantage scanner
+    ├── warden.html         case study: the homelab health tool
+    ├── homelab.html        case study: the infrastructure itself
     ├── 404.html            served by nginx for unknown paths
     ├── security.html       the "security check" page
     ├── css/
@@ -24,7 +26,10 @@ Open `index.html` in a browser and it works.
     │   ├── mark.svg        cat mark on transparent
     │   ├── favicon.svg     cat mark in a dark tile
     │   ├── vantage-report.png    report screenshot (case study)
-    │   └── vantage-findings.png  findings screenshot (case study)
+    │   ├── vantage-findings.png  findings screenshot (case study)
+    │   ├── vantage-diff.png      scan diff (case study)
+    │   ├── warden-dashboard.png  the dashboard (case study)
+    │   └── designs/        8 previews for the designs gallery
     ├── tools/build_logo.py regenerates the logo files
     └── README.md
 
@@ -96,8 +101,9 @@ remaining root-only steps (firewall, optional TLS) live in
 
 ## Related
 
-- `/home/nox/showcase` — five alternative homepage concepts, same person, served
-  on :8089. Useful when a section of this page needs rethinking.
+- `/home/nox/showcase` — eight alternative homepage concepts, same person, served
+  on :8089 and at <https://noxwer-beep.github.io/showcase/>. Three of them
+  (blueprint, aurora, ledger) are published as their own repositories.
 - `/home/nox/Obsidian/Engineering` — the vault with decisions, ops runbook and
   build logs for both projects.
 
@@ -134,14 +140,21 @@ To change or add a family, regenerate rather than hand-editing:
 
 ## Case studies
 
-`vantage.html` is the first full write-up: problem, what it does, the confidence
-model, the authorisation gate, what went wrong on the first attempt, and what is
-next. It reuses the site's tokens via `css/project.css` — same header, same theme
-toggle, same footer, so it reads as part of the site rather than a separate site.
+Three full write-ups, all reusing the site's tokens via `css/project.css` — same
+header, same theme toggle, same footer, so they read as part of the site:
 
-Adding another: copy `vantage.html`, keep the header/footer blocks, replace the
-`.prose` body, add a `pj-meta` list at the top, and link it from the relevant
-`.work-name` in `index.html`.
+- `vantage.html` — problem, the confidence model, the authorisation gate, what went
+  wrong on the first attempt.
+- `warden.html` — one file as the source of truth, availability vs trust, why drift
+  ordering is a judgement call.
+- `homelab.html` — the infrastructure the other two run against.
+
+Adding another: copy one, keep the header/footer blocks, replace the `.prose` body,
+add a `pj-meta` list at the top, and link it from the relevant `.work-name` in
+`index.html`.
+
+Figures use `<img width height>` plus `height: auto` — without it the height attribute
+wins over the CSS width and every screenshot renders squashed.
 
 ## Deploying
 
