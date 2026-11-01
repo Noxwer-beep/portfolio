@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warden — homelab inventory, health and drift | Maximilian Jatzkowski</title>
+<meta name="description" content="Warden turns 'what runs where' into a versioned TOML file, checks that it is true, and reports what changed since last time.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Warden — homelab inventory, health and drift">
+<meta property="og:description" content="One file describes what should be running; Warden checks it and reports the difference.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#designs">Designs</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Tooling · 2026</p>
+
+      <h1 class="display"><em>Warden</em></h1>
+
+      <p class="lead">
+        A homelab knows what runs where, but only in someone's head. Warden puts that
+        in a file you can version, checks whether the file is still true, records the
+        answer, and reports what changed since the last time you looked.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Type</dt><dd>CLI + local dashboard</dd></div>
+      <div><dt>Stack</dt><dd>Python · TOML · SQLite</dd></div>
+      <div><dt>Checks</dt><dd>TCP · HTTP · HTTPS · TLS</dd></div>
+      <div><dt>Tests</dt><dd>69, stdlib only</dd></div>
+      <div><dt>Dependencies</dt><dd>none required</dd></div>
+      <div><dt>Status</dt><dd>Running against my lab</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>The question I kept asking</h3>
+        <p>
+          Every few weeks: <em>what is actually running in the lab right now?</em> The
+          answer was a mix of memory, a bookmark folder, and a markdown table that was
+          accurate in March. Each time, I rebuilt the list by hand, forgot one thing,
+          and found out about the omission later.
+        </p>
+        <p>
+          The failure is not a lack of monitoring. It is that the inventory lives
+          nowhere authoritative. Uptime dashboards tell you a service you already
+          listed is down — they never tell you that you forgot a service, or that one
+          changed its certificate at 3am.
+        </p>
+
+        <h3><span class="num">02</span>One file, and it is the truth</h3>
+        <p>
+          Warden starts from a single <code>warden.toml</code>. Hosts first, then
+          services that reference them by name — never by address, so a re-IP is one
+          edit rather than six.
+        </p>
+
+        <pre class="code">[[host]]
+name = "nas"
+address = "10.10.10.20"
+tags = ["storage"]
+
+[[service]]
+name = "smb"
+host = "nas"
+port = 445
+check = "tcp"</pre>
+
+        <p>
+          Parsing is strict on purpose. A service pointing at a host that does not
+          exist is a <strong>refusal</strong>, not a silently unwatched service — that
+          is how you end up with a green dashboard covering three of your four VMs.
+          Duplicate names, out-of-range ports and unknown check types fail the same way,
+          with the reason stated.
+        </p>
+
+        <h3><span class="num">03</span>Checks that do not overstate themselves</h3>
+        <p>
+          Four check types: a TCP connect, an HTTP GET, the same over TLS, and a bare
+          handshake. Nothing logs in, nothing writes, nothing is installed on the
+          target — it is a client, and the hosts stay untouched.
+        </p>
+        <p>
+          That constraint forces an honesty Vantage already taught me: <strong>this
+          tool judges availability, not trust.</strong> Certificate chains are not
+          validated, because a lab full of self-signed certificates would be
+          permanently red and the dashboard would be useless. The footer says so, every
+          export says so, and deciding whether a certificate is <em>acceptable</em> is
+          Vantage's job.
+        </p>
+        <p>
+          Every probe is wrapped. An unexpected exception becomes <code>unknown</code>
+          with the reason — never a stack trace in the middle of a results table.
+        </p>
+
+        <h3><span class="num">04</span>Drift is the product</h3>
+        <p>
+          The status table is the obvious part. The useful part is the diff: what
+          changed between this run and the last one, ordered by how much it should worry
+          you — <strong>worsened</strong>, <strong>vanished</strong>,
+          <strong>certificate rotated</strong>, <strong>appeared</strong>,
+          <strong>improved</strong>.
+        </p>
+        <p>
+          A certificate rotation is not a failure, so it is not reported as one — but
+          it is reported, because an unexplained new certificate is exactly the thing
+          worth noticing. That ordering is a deliberate judgement, not a sort key.
+        </p>
+
+        <figure class="figure">
+          <img src="assets/warden-dashboard.png" width="1280" height="800" loading="lazy"
+               alt="Warden dashboard: one ok and three failing services, with a drift panel showing two services that went from ok to fail">
+          <figcaption>After changing one expectation: both affected services move ok → fail, and the drift panel says why.</figcaption>
+        </figure>
+
+        <h3><span class="num">05</span>What broke while building it</h3>
+        <p>
+          <strong>Reserved words.</strong> A column named <code>check</code> is a SQL
+          syntax error — <code>CHECK</code> is a keyword. The fix was quoting the
+          identifier, and the lesson was to read the error instead of the stack.
+        </p>
+        <p>
+          <strong>Two-line table cells.</strong> Putting the address under the service
+          name looked tidy in the code and broke row alignment in the terminal, because
+          a multi-line cell makes the row two lines tall while its neighbours stay one.
+          One line per record, port appended — readable at 80 columns.
+        </p>
+        <p>
+          <strong>Silent success.</strong> The first <code>--plain</code> run printed a
+          summary and no table, because the table only existed inside the live view. If
+          a mode prints a total, it has to print the rows the total came from.
+        </p>
+
+        <h3><span class="num">06</span>What's next</h3>
+        <ul>
+          <li>UDP probes — DNS and SNMP are currently invisible to it.</li>
+          <li>A weekly digest: uptime trends rather than a point-in-time table.</li>
+          <li>Feeding findings back into the documentation vault automatically, which
+            is what the markdown export is already half of.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Try it</span>
+          <p>
+            <code>./warden.py init &amp;&amp; ./warden.py check</code> — then
+            <code>./warden.py ui</code> for the dashboard, or
+            <code>./warden.py export</code> for a status page. Source on
+            <a href="https://github.com/Noxwer-beep/warden" rel="noopener">GitHub</a>.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="homelab.html">← Homelab</a>
+          <a class="next" href="vantage.html">Vantage →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Project facts">
+        <h4>Responsibilities</h4>
+        <ul>
+          <li><b>Design</b>Inventory schema, status vocabulary, drift ordering</li>
+          <li><b>Engineering</b>Probes, SQLite history, CLI, dashboard</li>
+          <li><b>Testing</b>69 tests against real sockets, not mocks</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Notable details</h4>
+        <ul>
+          <li><b>Zero required deps</b>TOML via the standard library</li>
+          <li><b>Availability ≠ trust</b>Stated in the UI and every export</li>
+          <li><b>Drift first</b>Changes ordered by attention, not alphabetically</li>
+          <li><b>Strict inventory</b>A dangling host reference is a refusal</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Related</h4>
+        <ul>
+          <li><b>Vantage</b>The scanner that audits what Warden watches</li>
+          <li><b>Homelab</b>The infrastructure this inventories</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/><path d="M33 40v11"/><path d="M56 40v11"/><path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
