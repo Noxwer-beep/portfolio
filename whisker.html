@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whisker — reading a packet capture | Maximilian Jatzkowski</title>
+<meta name="description" content="A packet capture analyser that answers the questions people actually have: who is talking, what is leaving, what looks automated.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Whisker — reading a packet capture">
+<meta property="og:description" content="tshark dissects, Whisker counts. One pass over a capture, then an opinion: scans, beacons, credentials in the clear.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#designs">Designs</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Tooling · Python · 1.0.0</p>
+
+      <h1 class="display">Whisker<br><em>reads the wire</em></h1>
+
+      <p class="lead">
+        Wireshark is the best packet dissector there is and it answers a question I
+        almost never have: what is in this packet. Whisker answers the ones that matter
+        in an incident — who talked to whom, did anything leave, is something beaconing
+        home every thirty seconds — in one pass, from a capture file, in the terminal or
+        in a browser.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Runs on</dt><dd>PCAP &amp; PCAPNG</dd></div>
+      <div><dt>Depends on</dt><dd>tshark + rich</dd></div>
+      <div><dt>Tests</dt><dd>40, against synthetic captures</dd></div>
+      <div><dt>Read speed</dt><dd>155 packets in 110 ms</dd></div>
+      <div><dt>Live capture</dt><dd>No, on purpose</dd></div>
+      <div><dt>Licence</dt><dd>MIT</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>The wrong tool, used well</h3>
+        <p>
+          I like Wireshark and I open it constantly. But the shape of it is a tree: one
+          packet, thirteen hundred fields, and you scroll. The questions I actually get
+          asked are aggregate — <em>did anything leave</em> is not a property of a packet,
+          it is a property of two hours of packets. So the split is:
+        </p>
+        <ul>
+          <li><strong>tshark dissects.</strong> Twenty years of protocol parsers, maintained
+            by people who know the RFCs. I am not rewriting them, and a tool that reimplements
+            DNS badly is a tool that lies.</li>
+          <li><strong>Whisker counts.</strong> One streaming pass over the fields tshark
+            extracts, counters instead of storage, then a verdict with evidence attached.</li>
+        </ul>
+
+        <figure class="figure">
+          <img src="assets/whisker-cli.png" width="1117" height="1062" loading="lazy"
+               alt="Whisker in the terminal: 155 packets, 8 findings, verdict critical, a findings table, evidence lines and a protocol breakdown">
+          <figcaption>One capture, one screen. The table is the index; the evidence under it is the argument.</figcaption>
+        </figure>
+
+        <h3><span class="num">02</span>One pass, bounded memory</h3>
+        <p>
+          Nothing is kept per packet. What is kept: counters, at most 256 timestamps per
+          flow (that is all the beacon maths needs), at most 20,000 flows, and a bucketed
+          histogram built as the packets arrive. A 2 GB capture costs about the same
+          memory as a 2 MB one, and the wall clock is almost entirely tshark's — the
+          counting itself is a few milliseconds.
+        </p>
+
+        <h3><span class="num">03</span>What it looks for, and why</h3>
+        <p>
+          Eight things, each with the threshold written down in one file so a report can
+          quote it instead of producing a number out of nowhere:
+        </p>
+        <pre class="code">critical  arp-conflict           one IP claimed by two or more MACs
+critical  cleartext-credentials  HTTP Basic auth, or FTP USER/PASS
+medium    port-scan              20+ distinct ports from one source (100+ upgrades it)
+medium    beaconing              8+ packets on a fixed interval, jitter under 18%
+medium    dns-long-names         labels over 40 characters
+medium    dns-volume             200+ distinct names from one host
+low       cleartext-traffic      protocols with no encryption, weighted by share
+low       icmp-unreachable       50+ unreachables — usually a scan</pre>
+
+        <p>
+          The beacon one is the reason I built this. Fixed-interval traffic is what
+          malware looks like and also what every monitoring agent looks like, so the
+          finding says "look at this", never "this is malicious" — and it reports the
+          jitter, so you can see how confident it is.
+        </p>
+
+        <h3><span class="num">04</span>The bug that taught me the design</h3>
+        <p>
+          My first version flagged "cleartext protocols" by looking at which ports
+          appeared. On the test capture it reported FTP, HTTP, SMTP and Telnet — because
+          a port scan had touched 21, 23 and 25. Nobody sent one byte of mail. The fix is
+          small and important: a protocol only counts when tshark dissected an application
+          layer on that port, not when something knocked on the door.
+        </p>
+        <p>
+          There is a test for exactly that now, and its name is the sentence:
+          <code class="inline">test_cleartext_names_real_protocols_only</code>.
+        </p>
+
+        <h3><span class="num">05</span>The same analysis, in a browser</h3>
+        <figure class="figure">
+          <img src="assets/whisker-web.png" width="1000" height="899" loading="lazy"
+               alt="Whisker's web dashboard: verdict card with severity counts, a traffic-over-time bar chart, and findings with evidence">
+          <figcaption>Opened with <code class="inline">whisker web capture.pcap</code>. Same data, same order, no packet tree.</figcaption>
+        </figure>
+        <p>
+          The page is server-rendered from the same object the CLI prints, with a client-side
+          filter over the conversation table and a JSON endpoint at
+          <code class="inline">/api/analysis</code> for anything that wants to run downstream.
+          The bar chart at the top is the thing that pays for itself: a scan is a spike,
+          exfiltration is a long plateau, a beacon is a picket fence.
+        </p>
+
+        <h3><span class="num">06</span>Testing a detector without a network</h3>
+        <p>
+          Live capture needs root and depends on traffic happening, so the tests synthesise
+          the capture instead — with scapy, into a temp file, deterministically:
+        </p>
+        <ul>
+          <li>one capture with <em>everything</em> in it: an ARP spoof, HTTP Basic auth,
+            an FTP login, a 30-port scan, a beacon with 30s ± jitter, a long DNS label,
+            an ICMP flood, and background keepalives so the timeline has a shape;</li>
+          <li>one capture with nothing in it: a normal ARP pair, five DNS lookups, a TLS
+            session. <strong>That one must produce zero findings.</strong></li>
+        </ul>
+        <p>
+          A detector that fires on clean traffic is worse than no detector, so the quiet
+          capture is a test rather than a nice-to-have. Forty tests, no network access,
+          runs in two seconds.
+        </p>
+
+        <h3><span class="num">07</span>What it does not do</h3>
+        <ul>
+          <li><strong>No live capture.</strong> It needs root or a setcap'd dumpcap, and
+            a tool that quietly asks for root is a tool that gets run wrong. Capture with
+            <code class="inline">dumpcap -w out.pcap</code>, then read it.</li>
+          <li><strong>No stream reassembly</strong> beyond what tshark gives. A payload
+            split across segments is only as visible as the dissector makes it.</li>
+          <li><strong>No payload inspection.</strong> No YARA, no signature matching, no
+            malware call. It describes traffic; it does not judge files.</li>
+          <li><strong>Passwords stay masked.</strong> The FTP finding records
+            <code class="inline">USER admin</code> and <code class="inline">PASS ********</code>.
+            A report that prints credentials is a report that leaks them.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Try it</span>
+          <p>
+            <a href="https://github.com/Noxwer-beep/whisker">github.com/Noxwer-beep/whisker</a>
+            — <code class="inline">pip install "whisker[ui]"</code>, then
+            <code class="inline">whisker your-capture.pcap</code>. It sits next to
+            <a href="vantage.html">Vantage</a>, <a href="https://github.com/Noxwer-beep/bastet">Bastet</a> and
+            <a href="warden.html">Warden</a> in the same lab.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="metasploitable.html">← Field notes</a>
+          <a class="next" href="warden.html">Warden →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Notes">
+        <h4>Commands</h4>
+        <ul>
+          <li><b>whisker x.pcap</b>Overview and findings</li>
+          <li><b>whisker flows x.pcap</b>Conversations by volume</li>
+          <li><b>whisker dns x.pcap</b>Names that were resolved</li>
+          <li><b>whisker web x.pcap</b>The browser view</li>
+          <li><b>--fail-on critical</b>Exit 4 for CI</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Numbers</h4>
+        <ul>
+          <li><b>40</b>tests, no network</li>
+          <li><b>155</b>packets in 110 ms</li>
+          <li><b>0</b>findings on clean traffic</li>
+          <li><b>1</b>pass over the file</li>
+          <li><b>20k</b>flow cap, 256 timestamps each</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Related</h4>
+        <ul>
+          <li><b>Vantage</b>Scans hosts and services</li>
+          <li><b>Warden</b>Watches services over time</li>
+          <li><b>Bastet</b>Triage, CVE and case notes</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/><path d="M33 40v11"/><path d="M56 40v11"/><path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
