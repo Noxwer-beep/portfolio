@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clowder — one front door for four tools | Maximilian Jatzkowski</title>
+<meta name="description" content="A console that gathers Vantage, Warden, Bastet and Whisker into one dashboard — and reads their stores instead of recomputing anything.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clowder — one front door for four tools">
+<meta property="og:description" content="Four tools, four places to look. One dashboard that reads them all and refuses to recompute a single number.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#designs">Designs</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Tooling · Python · SQLite · Flask</p>
+
+      <h1 class="display">Clowder<br><em>one front door</em></h1>
+
+      <p class="lead">
+        Four tools meant four terminals and four places to look every morning. Clowder is
+        the console that fixes that: one dashboard, one command line, and one ranked list
+        of everything that needs a look — read from what Vantage, Warden, Bastet and
+        Whisker already wrote, never recomputed.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Gathers</dt><dd>4 tools, 3 data stores</dd></div>
+      <div><dt>Writes</dt><dd>Nothing</dd></div>
+      <div><dt>Tests</dt><dd>30, no network</dd></div>
+      <div><dt>Passthrough</dt><dd>Same argv, same exit code</dd></div>
+      <div><dt>Web</dt><dd>Port 8780, re-reads on load</dd></div>
+      <div><dt>Licence</dt><dd>MIT</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>Four good tools, one bad morning</h3>
+        <p>
+          Vantage tells me what a host exposes. Warden tells me whether the services I
+          care about are up. Bastet holds the cases and the timeline. Whisker reads a
+          capture when something looks odd. Each one is useful on its own, and together
+          they were the reason I opened four terminals before knowing whether anything was
+          actually wrong.
+        </p>
+        <figure class="figure">
+          <img src="assets/clowder-web.png" width="1000" height="922" loading="lazy"
+               alt="Clowder dashboard: four tools with install state, a ranked needs-a-look table, and two cards for the last scan and the last check">
+          <figcaption>Everything that is true right now, in the order it deserves attention.</figcaption>
+        </figure>
+
+        <h3><span class="num">02</span>The rule that keeps it honest</h3>
+        <p>
+          The obvious way to build this is to import the other three packages and call
+          their functions. That is also how you end up with two implementations of a risk
+          score: the tested one inside Vantage, and the convenient one in the dashboard
+          that nobody wrote tests for and that slowly becomes the number you quote.
+        </p>
+        <p>
+          So Clowder reads files instead. <code class="inline">report.json</code> from the
+          last scan, the newest row in Warden's <code class="inline">runs</code> table with
+          its <code class="inline">checks</code> beside it, the open cases in Bastet's
+          <code class="inline">cases.db</code>. No imports, no recomputation, nothing cached
+          server-side — the page re-reads the stores on every load, so it cannot disagree
+          with what the tools report.
+        </p>
+
+        <h3><span class="num">03</span>One scale for two vocabularies</h3>
+        <p>
+          The genuinely new thing is the attention list, and it needed a decision: a
+          scanner talks in severities, a checker talks in health. Ranking them on one scale
+          is a judgement, so it is written down once and quoted everywhere:
+        </p>
+        <pre class="code">critical   a confirmed critical finding — someone can walk in
+fail       a service that is supposed to be up is not
+high/warn  a high finding, or a service that answered badly
+medium     a medium finding
+low        worth knowing, not worth waking up for</pre>
+        <p>
+          A critical finding outranks an outage because the finding means the box is
+          reachable by someone else, which is worse than me noticing a dead port. That
+          ranking lives in one dictionary in <code class="inline">config.py</code> — the
+          first version had two copies of it, and the tests caught them drifting apart
+          within the hour.
+        </p>
+
+        <h3><span class="num">04</span>The passthrough is a contract</h3>
+        <p>
+          For real work the console gets out of the way: <code class="inline">clowder warden
+          check</code> execs <code class="inline">./warden check</code> with the same argv,
+          in the tool's own directory, and returns the tool's exit code unchanged.
+        </p>
+        <pre class="code">$ clowder warden check
+… the tool's own output …
+$ echo $?
+4        # warden's "a check failed", not clowder's</pre>
+        <p>
+          That matters more than it sounds: exit codes are the interface scripts use, and a
+          wrapper that normalises them quietly breaks every cron job that depended on
+          `--fail-on`. There is a test that runs an actual shell script with
+          <code class="inline">exit 7</code> and asserts the console returns 7.
+        </p>
+        <figure class="figure">
+          <img src="assets/clowder-cli.png" width="1027" height="1062" loading="lazy"
+               alt="Clowder in the terminal: tools table with install state and data paths, attention table, and the last scan block">
+          <figcaption>The same data in the terminal, because sometimes a browser is the wrong window.</figcaption>
+        </figure>
+
+        <h3><span class="num">05</span>Testing against other people's schemas</h3>
+        <p>
+          The interesting failure mode is not "my code is wrong", it is "their database
+          changed". So the tests build real SQLite files with the exact schemas the tools
+          use — and then two more: one with an older, thinner schema, and one
+          <code class="inline">report.json</code> cut off mid-write. Both must produce a
+          line under <code class="inline">doctor</code>, never a traceback. A console you
+          open <em>because</em> something is broken is the last thing that should crash.
+        </p>
+        <p>
+          Thirty tests, no network, no fixtures checked in: every database is created in a
+          temp directory with the same <code class="inline">CREATE TABLE</code> statements
+          the tools run.
+        </p>
+
+        <h3><span class="num">06</span>What it refuses to do</h3>
+        <ul>
+          <li><strong>It does not install anything.</strong> Tools are found on
+            <code class="inline">PATH</code>, then in <code class="inline">~/projects</code>,
+            then reported as <code class="inline">missing</code>. No silent pip.</li>
+          <li><strong>It does not own a judgement.</strong> No severity, no score, no health
+            verdict is computed here.</li>
+          <li><strong>It does not hide whisker's absence.</strong> Whisker stores nothing —
+            it analyses a capture on demand — so its panel says exactly that instead of
+            inventing a "last run".</li>
+          <li><strong>It does not copy data.</strong> Three stores, read directly, opened
+            read-only at the SQLite level.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Try it</span>
+          <p>
+            <a href="https://github.com/Noxwer-beep/clowder">github.com/Noxwer-beep/clowder</a>
+            — <code class="inline">pip install "clowder[ui]"</code>, then
+            <code class="inline">clowder</code>. It gathers
+            <a href="vantage.html">Vantage</a>,
+            <a href="warden.html">Warden</a>,
+            <a href="https://github.com/Noxwer-beep/bastet">Bastet</a> and
+            <a href="whisker.html">Whisker</a>.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="metasploitable.html">← Field notes</a>
+          <a class="next" href="whisker.html">Whisker →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Notes">
+        <h4>Reads</h4>
+        <ul>
+          <li><b>vantage</b>report.json, newest</li>
+          <li><b>warden</b>runs + checks tables</li>
+          <li><b>bastet</b>cases + events tables</li>
+          <li><b>whisker</b>nothing, on demand</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Commands</h4>
+        <ul>
+          <li><b>clowder</b>The dashboard</li>
+          <li><b>clowder doctor</b>Installed? Where is the data?</li>
+          <li><b>clowder web</b>Browser view, port 8780</li>
+          <li><b>clowder warden check</b>Passthrough, same exit code</li>
+          <li><b>--fail-on fail</b>Exit 4 for scripts</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Numbers</h4>
+        <ul>
+          <li><b>30</b>tests, no network</li>
+          <li><b>3</b>data stores, read-only</li>
+          <li><b>0</b>numbers recomputed</li>
+          <li><b>1</b>ranking dictionary</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/><path d="M33 40v11"/><path d="M56 40v11"/><path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
