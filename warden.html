@@ -196,9 +196,9 @@ check = "tcp"</pre>
         <div class="callout">
           <span class="tag">Try it</span>
           <p>
-            <code>./warden.py init &amp;&amp; ./warden.py check</code> — then
-            <code>./warden.py ui</code> for the dashboard, or
-            <code>./warden.py export</code> for a status page. Source on
+            <code>./warden init &amp;&amp; ./warden check</code> — then
+            <code>./warden ui</code> for the dashboard, or
+            <code>./warden export</code> for a status page. Source on
             <a href="https://github.com/Noxwer-beep/warden" rel="noopener">GitHub</a>.
           </p>
         </div>
@@ -221,7 +221,7 @@ check = "tcp"</pre>
 
         <h4>Notable details</h4>
         <ul>
-          <li><b>Zero required deps</b>TOML via the standard library</li>
+          <li><b>One dependency</b>rich draws the tables; TOML and SQLite are stdlib</li>
           <li><b>Availability ≠ trust</b>Stated in the UI and every export</li>
           <li><b>Drift first</b>Changes ordered by attention, not alphabetically</li>
           <li><b>Strict inventory</b>A dangling host reference is a refusal</li>
