@@ -201,6 +201,9 @@
 .figure { margin: 2rem 0; }
 .figure img {
   width: 100%;
+  /* the height attribute is a presentational hint; without this the image
+     renders at its literal pixel height and squashes the aspect ratio */
+  height: auto;
   border: 1px solid var(--line);
   border-radius: 2px;
   display: block;
