@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homelab — infrastructure you can explain | Maximilian Jatzkowski</title>
+<meta name="description" content="A homelab built around a hypervisor, a firewall and a managed switch: VLAN segmentation, the port-map constraints of consumer hardware, and documentation treated as the deliverable.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Homelab — infrastructure you can explain">
+<meta property="og:description" content="VLAN segmentation on consumer hardware, documented while it is built.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#designs">Designs</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Infrastructure · ongoing</p>
+
+      <h1 class="display"><em>Homelab</em></h1>
+
+      <p class="lead">
+        A hypervisor, a firewall and one managed switch — arranged so that a
+        deliberately vulnerable machine can live next to my documentation without
+        either of them trusting the other. The interesting part is not the hardware.
+        It is the segmentation, the constraints of consumer gear, and the fact that
+        none of it counts until it is written down.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Type</dt><dd>Bare-metal lab</dd></div>
+      <div><dt>Core</dt><dd>Proxmox VE · OPNsense</dd></div>
+      <div><dt>Switching</dt><dd>Managed, 802.1Q</dd></div>
+      <div><dt>Isolation</dt><dd>Per-VLAN firewall rules</dd></div>
+      <div><dt>Status</dt><dd>Running, documented</dd></div>
+      <div><dt>Disclosure</dt><dd>Addressing redacted</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>Why a lab at all</h3>
+        <p>
+          You cannot learn segmentation from a book. You can read that VLANs isolate
+          broadcast domains and that a firewall filters between them, and still spend
+          a weekend on a rule that silently drops DNS because it sits above the
+          allow. The lab exists so those mistakes cost an evening instead of a client.
+        </p>
+        <p>
+          The second reason is less flattering: I wanted somewhere to run
+          deliberately vulnerable software. A target machine that exists to be broken
+          has to be isolated from everything that matters — which turns "set up a VM"
+          into a real network design problem.
+        </p>
+
+        <h3><span class="num">02</span>The shape of it</h3>
+        <p>
+          Three layers. The home router provides the uplink and nothing else. Behind
+          it, a virtualised firewall owns the lab network: it is the only thing that
+          routes between the lab and the house. The hypervisor sits on both sides —
+          one interface facing management, one facing the lab — and the managed switch
+          carries the tagging.
+        </p>
+
+        <figure class="figure">
+          <svg viewBox="0 0 680 300" role="img" aria-labelledby="topo-title topo-desc" style="width:100%;height:auto;border:1px solid var(--line);border-radius:2px;background:var(--surface)">
+            <title id="topo-title">Homelab topology</title>
+            <desc id="topo-desc">A router connects to a managed switch. The switch carries a management segment and an isolated lab segment. A hypervisor has one interface on each; the firewall VM separates the lab from the house network.</desc>
+            <g font-family="'JetBrains Mono', monospace" font-size="10" fill="#a2a8a4">
+              <!-- links -->
+              <line x1="120" y1="60" x2="210" y2="60" stroke="#767c78" stroke-width="1"/>
+              <line x1="330" y1="60" x2="420" y2="60" stroke="#767c78" stroke-width="1"/>
+              <line x1="540" y1="60" x2="540" y2="130" stroke="#c9f24d" stroke-width="1" stroke-dasharray="3 3"/>
+
+              <!-- router -->
+              <rect x="30" y="42" width="90" height="36" rx="2" fill="none" stroke="#767c78"/>
+              <text x="75" y="58" text-anchor="middle" fill="#f1f2ed">router</text>
+              <text x="75" y="70" text-anchor="middle" font-size="8">uplink only</text>
+
+              <!-- switch -->
+              <rect x="210" y="36" width="120" height="48" rx="2" fill="none" stroke="#f1f2ed"/>
+              <text x="270" y="54" text-anchor="middle" fill="#f1f2ed">managed switch</text>
+              <text x="270" y="68" text-anchor="middle" font-size="8">802.1Q · PVID per port</text>
+
+              <!-- hypervisor -->
+              <rect x="420" y="36" width="120" height="48" rx="2" fill="none" stroke="#f1f2ed"/>
+              <text x="480" y="54" text-anchor="middle" fill="#f1f2ed">hypervisor</text>
+              <text x="480" y="68" text-anchor="middle" font-size="8">two interfaces</text>
+
+              <!-- segments -->
+              <rect x="420" y="130" width="120" height="44" rx="2" fill="none" stroke="#c9f24d"/>
+              <text x="480" y="148" text-anchor="middle" fill="#c9f24d">firewall VM</text>
+              <text x="480" y="161" text-anchor="middle" font-size="8">routes lab ↔ house</text>
+
+              <rect x="420" y="200" width="120" height="44" rx="2" fill="none" stroke="#c9f24d"/>
+              <text x="480" y="218" text-anchor="middle" fill="#c9f24d">lab VLAN</text>
+              <text x="480" y="231" text-anchor="middle" font-size="8">targets · test services</text>
+
+              <line x1="480" y1="174" x2="480" y2="200" stroke="#c9f24d" stroke-width="1"/>
+
+              <!-- house -->
+              <rect x="210" y="200" width="120" height="44" rx="2" fill="none" stroke="#767c78"/>
+              <text x="270" y="218" text-anchor="middle" fill="#a2a8a4">house network</text>
+              <text x="270" y="231" text-anchor="middle" font-size="8">no lab routes</text>
+              <line x1="420" y1="222" x2="330" y2="222" stroke="#767c78" stroke-width="1" stroke-dasharray="3 3"/>
+
+              <text x="30" y="270" font-size="9" fill="#767c78">Addresses omitted on purpose — the shape is the point, the numbers are reconnaissance.</text>
+            </g>
+          </svg>
+          <figcaption>Sanitised topology: two segments, one firewall between them, no addresses.</figcaption>
+        </figure>
+
+        <h3><span class="num">03</span>The constraint that taught me the most</h3>
+        <p>
+          The switch is a consumer managed switch — a real one, with a real web UI, but
+          not enterprise. It does not do per-port hybrid tagging the way a data-centre
+          switch does: you assign a PVID to a port and the port carries one untagged
+          VLAN. Fine for access ports; restrictive when one physical host needs to be
+          on two networks.
+        </p>
+        <p>
+          The way out was to stop fighting it: two physical interfaces on the hypervisor,
+          one per segment, and a switch port plan where every port is an access port.
+          No trunk, no native-VLAN subtleties, nothing to misconfigure at 1 a.m. The
+          limitation produced a simpler design than the "proper" one would have.
+        </p>
+
+        <div class="callout">
+          <span class="tag">Lesson</span>
+          <p>
+            When the hardware will not do the elegant thing, the honest move is to
+            change the design — not to write a config you cannot explain to yourself
+            three months later.
+          </p>
+        </div>
+
+        <h3><span class="num">04</span>Documentation is the deliverable</h3>
+        <p>
+          Every non-obvious decision gets a numbered entry with the reasoning and the
+          alternative that was rejected. Four exist so far: the overall design
+          direction, running containers rootless rather than as root, the logo
+          geometry, and the decision to keep a separate engineering vault instead of
+          scattering notes across projects.
+        </p>
+        <p>
+          The test I apply: if I come back in six months, can I tell <em>why</em> the
+          firewall rule is there — not just that it exists? A config without the reason
+          attached is a config nobody will dare change.
+        </p>
+
+        <h3><span class="num">05</span>What is published, and what is not</h3>
+        <p>
+          The architecture documentation is public, because the reasoning is worth
+          sharing and the writing is part of the work. The addresses are not.
+        </p>
+        <ul>
+          <li><strong>Public:</strong> design reasoning, VLAN plan at the concept level,
+            configuration approach, troubleshooting history, lessons learned.</li>
+          <li><strong>Private:</strong> exact IPs, the per-port VLAN map, the master PDF
+            compilation, and the engineering vault with runbooks and build logs.</li>
+          <li><strong>Why:</strong> a network map is reconnaissance material. Publishing
+            which subnet the firewall lives on, which ports are access ports and where
+            the hypervisor's management interface sits saves an attacker the first hour
+            of an engagement — for no benefit to a reader who wants to learn.</li>
+        </ul>
+        <p>
+          The public repository was audited and redacted after the fact: addresses were
+          replaced with placeholders, and the compiled PDF was removed because it
+          contained the full detail and could not be redacted in place.
+        </p>
+
+        <h3><span class="num">06</span>What's next</h3>
+        <ul>
+          <li>ZFS storage pool — planned, not built, and documented as such.</li>
+          <li>An inventory and health-check tool so "what runs where" stops living in
+            a markdown table.</li>
+          <li>Backups with a restore that has actually been tested, not just configured.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Read it</span>
+          <p>
+            The architecture documentation is public and redacted:
+            <a href="https://github.com/Noxwer-beep/homelab-infrastructure" rel="noopener">github.com/Noxwer-beep/homelab-infrastructure</a>.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="index.html#work">← All work</a>
+          <a class="next" href="vantage.html">Vantage case study →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Project facts">
+        <h4>Responsibilities</h4>
+        <ul>
+          <li><b>Design</b>Segmentation, addressing plan, firewall rule set</li>
+          <li><b>Build</b>Hypervisor, switching, container services</li>
+          <li><b>Operations</b>Runbooks, security checklist, change log</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Notable details</h4>
+        <ul>
+          <li><b>Access ports only</b>Consumer switch limitation turned into a simpler design</li>
+          <li><b>Rootless containers</b>No sudo at runtime, documented as a decision</li>
+          <li><b>Redacted publication</b>Reasoning public, addressing private</li>
+          <li><b>Numbered decisions</b>D001–D004, each with the rejected alternative</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Related</h4>
+        <ul>
+          <li><b>Vantage</b>The scanner that audits this lab</li>
+          <li><b>Design studies</b>Eight layout experiments</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/><path d="M33 40v11"/><path d="M56 40v11"/><path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
