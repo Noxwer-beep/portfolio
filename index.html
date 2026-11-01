@@ -70,9 +70,9 @@
         </h1>
 
         <p class="lead">
-          I'm Maximilian — a 25-year-old IT student in Germany. I run a homelab with
-          managed switches and firewalls, work through Hack The Box, and build
-          interfaces that don't make people think about the interface.
+          I'm Maximilian, 25, studying IT in Germany. I run a homelab — server, managed
+          switch, firewall, VLANs — practise on Hack The Box, and build the tools I keep
+          needing. I'm working towards a security analyst role.
         </p>
 
         <div class="hero-actions">
@@ -129,8 +129,9 @@
           <span class="row-num" aria-hidden="true">01</span>
           <h3 class="row-title">Infrastructure</h3>
           <div class="row-body">
-            <p>A self-built server, managed switches, firewall rules, and a segmented
-              network — documented end to end, so future me can debug past me.</p>
+            <p>A server I put together myself, a managed switch, firewall rules and
+              separate VLANs. All of it is written down, because in six months I will not
+              remember why that rule exists.</p>
             <ul class="tags" aria-label="Technologies">
               <li>Linux</li><li>Docker</li><li>Switching</li><li>Firewalls</li>
             </ul>
@@ -144,8 +145,8 @@
           <span class="row-num" aria-hidden="true">02</span>
           <h3 class="row-title">Security</h3>
           <div class="row-body">
-            <p>Hack The Box machines and local labs like Metasploitable 2:
-              enumeration, exploitation, and the patience to write down every step.</p>
+            <p>Hack The Box machines and a local Metasploitable box. Notes on every one,
+              dead ends included — the dead ends are usually where I learn something.</p>
             <ul class="tags" aria-label="Technologies">
               <li>Hack The Box</li><li>Metasploitable 2</li><li>Nmap</li><li>Priv-esc</li>
             </ul>
@@ -159,8 +160,8 @@
           <span class="row-num" aria-hidden="true">03</span>
           <h3 class="row-title">AI agents</h3>
           <div class="row-body">
-            <p>Small tool-calling agents and automation experiments — built to be
-              useful first and a demo second, which is the harder order.</p>
+            <p>Small tool-calling agents I actually use, plus a lot of experiments that
+              went nowhere. I care whether it saves me work, not whether it looks clever.</p>
             <ul class="tags" aria-label="Technologies">
               <li>LLMs</li><li>Tool calling</li><li>Python</li><li>Automation</li>
             </ul>
@@ -174,8 +175,9 @@
           <span class="row-num" aria-hidden="true">04</span>
           <h3 class="row-title">Web</h3>
           <div class="row-body">
-            <p>Interfaces with real hierarchy, honest performance budgets, and no
-              framework wherever a framework isn't earning its weight.</p>
+            <p>Hand-written pages. No framework unless it earns its place, no build step
+              unless I need one — this site and the eight designs below are plain HTML,
+              CSS and JavaScript.</p>
             <ul class="tags" aria-label="Technologies">
               <li>HTML/CSS</li><li>JavaScript</li><li>Accessibility</li><li>Performance</li>
             </ul>
@@ -193,57 +195,66 @@
     <div class="wrap">
       <header class="section-head reveal">
         <p class="index"><span>02</span>Work</p>
-        <h2 class="h2">Selected things I've built</h2>
+        <h2 class="h2">Things I've built</h2>
       </header>
 
       <div class="work-list">
         <article class="work-item reveal">
           <span class="work-year">2026</span>
+          <h3 class="work-name"><a href="https://github.com/Noxwer-beep/bastet">Bastet</a></h3>
+          <p class="work-desc">The toolbox I got tired of not having on a shift: triage an
+            indicator, read a log and find the brute force, look up the CVE, and write the
+            case up — one prompt, offline where it can be.</p>
+          <span class="work-stack">Python · SOC · ATT&amp;CK</span>
+        </article>
+
+        <article class="work-item reveal">
+          <span class="work-year">2026</span>
           <h3 class="work-name"><a href="warden.html">Warden</a></h3>
-          <p class="work-desc">Homelab inventory, health checks and drift. One TOML file
-            says what should be running; Warden checks it, records history, and reports
-            what changed since last time.</p>
+          <p class="work-desc">I kept forgetting what was running in the lab. One TOML
+            file now says what should be there, Warden checks it on a schedule, and the
+            digest tells me what changed since last week.</p>
           <span class="work-stack">Python · TOML · SQLite</span>
         </article>
 
         <article class="work-item reveal">
           <span class="work-year">2026</span>
           <h3 class="work-name"><a href="vantage.html">Vantage</a></h3>
-          <p class="work-desc">A scope-enforced network scanner and vulnerability triage tool.
-            Wraps nmap, nikto, whatweb and TLS inspection behind an authorisation gate, then
-            grades every finding by how sure it actually is.</p>
+          <p class="work-desc">A scanner I point at my own network. It refuses to run
+            without a scope I state up front, and it keeps what it confirmed away from what
+            it only suspects.</p>
           <span class="work-stack">Python · nmap · Flask</span>
         </article>
 
         <article class="work-item reveal">
           <span class="work-year">2026</span>
           <h3 class="work-name"><a href="homelab.html">Homelab</a></h3>
-          <p class="work-desc">Bare-metal server, managed switches, firewall rules, and a
-            segmented network — with documentation for the whole build.</p>
+          <p class="work-desc">Bare-metal server, managed switch, firewall, segmented
+            network — and the documentation that makes it rebuildable.</p>
           <span class="work-stack">Linux · Networking · Firewalls</span>
         </article>
 
         <article class="work-item reveal">
           <span class="work-year">Ongoing</span>
           <h3 class="work-name">Hack The Box</h3>
-          <p class="work-desc">Machines and challenges across web, network, and privilege
-            escalation; notes kept for every box, including the dead ends.</p>
+          <p class="work-desc">Machines and challenges, mostly web and privilege
+            escalation. Notes for every box, dead ends included.</p>
           <span class="work-stack">Enumeration · Priv-esc</span>
         </article>
 
         <article class="work-item reveal">
           <span class="work-year">Ongoing</span>
           <h3 class="work-name">Agent experiments</h3>
-          <p class="work-desc">Tool-calling agents for research and automation, and a
-            running argument with myself about where they are actually worth it.</p>
+          <p class="work-desc">Tool-calling agents for research and automation. Half of
+            them get thrown away, which is the point of trying.</p>
           <span class="work-stack">LLMs · Python · Tooling</span>
         </article>
 
         <article class="work-item reveal">
           <span class="work-year">2026</span>
           <h3 class="work-name">This site</h3>
-          <p class="work-desc">Hand-written, no framework, no build step. Content in one
-            file, craft in two others. Press <kbd>c</kbd>.</p>
+          <p class="work-desc">Hand-written, no framework, no build step. Press
+            <kbd>c</kbd>.</p>
           <span class="work-stack">HTML/CSS · JavaScript</span>
         </article>
       </div>
@@ -257,9 +268,9 @@
         <p class="index"><span>03</span>Designs</p>
         <h2 class="h2">Eight arguments about the same page</h2>
         <p class="section-note">
-          The same content, argued eight different ways — a study in how much a
-          layout decides. Each one is a single hand-written page: one HTML file, one
-          stylesheet, one script.
+          Same content, eight different layouts, to see how much the layout decides.
+          Each one is a single hand-written page: one HTML file, one stylesheet, one
+          script.
         </p>
       </header>
 
@@ -340,20 +351,20 @@
           I learn by building the thing, breaking it, and writing down what happened.
         </p>
         <p>
-          I'm 25, studying IT in Germany. Outside of coursework I run a homelab — a
-          server, managed switches, firewalls, a segmented network — and keep
-          documentation for all of it, because a system nobody can explain is a system
-          nobody can fix.
+          I'm 25 and studying IT in Germany. Most of what I know comes from running my
+          own lab: a server, a managed switch, a firewall, separate VLANs. I document all
+          of it, because a system I can't explain is one I can't fix at 2am.
         </p>
         <p>
-          Security is the other half: Hack The Box and local labs like Metasploitable 2,
-          where the interesting part is rarely the exploit and usually the enumeration.
-          Lately I've been building small AI agents and working out where they genuinely
-          help instead of where they merely look impressive.
+          Security is the other half: Hack The Box, a Metasploitable box on the lab
+          network, and the tools on this site. I built them because I wanted to know how
+          the pieces actually work, and I'm aiming at a security analyst role where that
+          kind of detail matters.
         </p>
         <p>
-          I work in English, think in German, and prefer a short conversation to a long
-          spec. A cat is involved in the day-to-day, but she mostly supervises.
+          I work in English and think in German. I'd rather have a short conversation
+          than a long spec, and I'd rather show you the thing than describe it. There is a
+          cat; she supervises.
         </p>
 
         <ul class="facts">
