@@ -233,7 +233,35 @@ vsftpd 2.3.4 - Backdoor Command Execution (Metasploit)   unix/remote/17491.rb</p
           anyone else's network it needs to be written down before it runs.
         </p>
 
-        <h3><span class="num">06</span>22:15 — Two scans, forty minutes apart</h3>
+                <h3><span class="num">06</span>22:14 — What access existed, and what was never used</h3>
+        <p>
+          Worth being precise about, because "I got in" is a claim that should come with
+          evidence. Nothing was exploited here: no shell, no session, no login typed by
+          hand. What the tools did confirm is that four services would have accepted one.
+        </p>
+
+        <pre class="code">service         would have accepted               found by
+VNC 5900        password, password123             nuclei vnc-default-login
+PostgreSQL 5432 empty password, postgres:postgres nuclei pgsql-empty-password
+FTP 21          ftp:123456                        nuclei ftp-weak-credentials
+PHP 5.2.4 CGI   CVE-2012-1823 (arg injection)     nuclei template, probe only</pre>
+
+        <p>
+          Documented and deliberately not touched: the vsftpd 2.3.4 backdoor on 21/tcp that
+          opens a shell on port 6200 (CVE-2011-2523), distccd on 3632 (CVE-2004-2687),
+          Samba 3.0.20 (CVE-2017-7494) and Shellshock (CVE-2014-6271). Any of them would
+          have given a shell on a box that was never meant to be hard.
+        </p>
+        <p>
+          The honest conclusion is the useful part: on this machine you do not need an
+          exploit. Three services accept a guessable credential and one is enough for
+          complete compromise — the famous CVEs are decoration. It is also exactly the gap
+          between my two tools: Vantage reported no critical because it grades exposure and
+          versions, nuclei reported two because it tried the credentials. A report with
+          only one of those is an incomplete picture of the same box.
+        </p>
+
+<h3><span class="num">07</span>22:15 — Two scans, forty minutes apart</h3>
         <figure class="figure">
           <img src="assets/ms-diff.png" width="611" height="222" loading="lazy"
                alt="Vantage diff output: risk 87 to 87, 0 new, 0 resolved, 33 still present, no changes">
@@ -245,7 +273,7 @@ vsftpd 2.3.4 - Backdoor Command Execution (Metasploit)   unix/remote/17491.rb</p
           a determinism bug to fix before I trusted anything else it said.
         </p>
 
-        <h3><span class="num">07</span>22:20 — Between scans, something has to watch</h3>
+        <h3><span class="num">08</span>22:20 — Between scans, something has to watch</h3>
         <p>
           A scan is a photograph. Warden is the part that runs when I am not looking: one
           TOML file says what should be up, and it checks over TCP, UDP, HTTP and TLS.
@@ -285,7 +313,7 @@ target-vnc  :5900             ✓ ok             0 ms   connected in 0 ms</pre>
           status table would have said "fine" thirty seconds later.
         </p>
 
-        <h3><span class="num">08</span>22:25 — The write-up, while I still remember it</h3>
+        <h3><span class="num">09</span>22:25 — The write-up, while I still remember it</h3>
         <p>
           Notes go in as the work happens, not after. Bastet keeps them in a case with a
           timeline, and exports markdown for the ticket or the vault:
@@ -301,7 +329,7 @@ ttps      T1595, T1190, T1210, T1046
 21:55  log       Scan 20261101-214652-e849: 23 ports, 33 findings, 87/100, 8m41s
 21:55  decision  Nothing needs containment. Training target, isolated, no route out.</pre>
 
-        <h3><span class="num">09</span>What this actually showed</h3>
+        <h3><span class="num">10</span>What this actually showed</h3>
         <ul>
           <li><strong>The tools agree with each other.</strong> Two scans, same result; the
             checker and the scanner describe the same box from different angles.</li>
@@ -346,6 +374,7 @@ ttps      T1595, T1190, T1210, T1046
           <li><b>33</b>findings, 15 confirmed</li>
           <li><b>87/100</b>risk, grade critical</li>
           <li><b>3</b>CVEs at 9.8</li>
+          <li><b>4</b>entry points, 0 used</li>
           <li><b>0</b>changes between scans</li>
         </ul>
 
