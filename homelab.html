@@ -82,6 +82,8 @@
       <div><dt>Core</dt><dd>Proxmox VE · OPNsense</dd></div>
       <div><dt>Switching</dt><dd>Managed, 802.1Q</dd></div>
       <div><dt>Isolation</dt><dd>Per-VLAN firewall rules</dd></div>
+      <div><dt>Storage</dt><dd>NAS · 2×4TB RAIDZ1</dd></div>
+      <div><dt>Practice</dt><dd>Metasploitable 2, isolated</dd></div>
       <div><dt>Status</dt><dd>Running, documented</dd></div>
       <div><dt>Disclosure</dt><dd>Addressing redacted</dd></div>
     </dl>
@@ -184,7 +186,33 @@
           </p>
         </div>
 
-        <h3><span class="num">04</span>Documentation is the deliverable</h3>
+        <h3><span class="num">04</span>What actually runs</h3>
+        <p>
+          The diagram is the design. This is what answers today: OPNsense as gateway,
+          router and DHCP; a Proxmox node; a services VM that hosts the sites and the
+          tooling; a NAS with two 4TB drives in RAIDZ1 holding the backups; and a
+          Metasploitable 2 box that exists to be broken.
+        </p>
+        <p>
+          Putting those two in the same rack is the whole exercise. The NAS holds the
+          backup of everything; the practice target is a machine with telnet, rsh and an
+          unauthenticated VNC by design. They stay safe next to each other because of
+          three rules, not because of trust:
+        </p>
+        <ul>
+          <li>The vulnerable box sits on its own segment. Its only route out is the firewall.</li>
+          <li>Nothing on the home LAN starts a connection to it, and it cannot reach the
+            home network. If it gets owned, it stays owned in one place.</li>
+          <li>No port forwarding, ever. It is a practice target, not a service.</li>
+        </ul>
+        <p>
+          The NAS is the opposite case: reachable from the lab only through an explicit
+          rule, never exposed. A scan from the services VM does not see it at all, which
+          is the segmentation working — the first instinct on a missing host is to widen
+          a rule, and that instinct is usually wrong.
+        </p>
+
+        <h3><span class="num">05</span>Documentation is the deliverable</h3>
         <p>
           Every non-obvious decision gets a numbered entry with the reasoning and the
           alternative that was rejected. Four exist so far: the overall design
@@ -198,7 +226,7 @@
           attached is a config nobody will dare change.
         </p>
 
-        <h3><span class="num">05</span>What is published, and what is not</h3>
+        <h3><span class="num">06</span>What is published, and what is not</h3>
         <p>
           The architecture documentation is public, because the reasoning is worth
           sharing and the writing is part of the work. The addresses are not.
@@ -219,7 +247,7 @@
           contained the full detail and could not be redacted in place.
         </p>
 
-        <h3><span class="num">06</span>What's next</h3>
+        <h3><span class="num">07</span>What's next</h3>
         <ul>
           <li>ZFS storage pool — planned, not built, and documented as such.</li>
           <li>An inventory and health-check tool so "what runs where" stops living in
