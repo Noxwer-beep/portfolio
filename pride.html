@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pride — five agents on a cadence, not a prompt | Maximilian Jatzkowski</title>
+<meta name="description" content="A supervised pack of agents that watches the sites, checks the homelab, runs the test suites and scans the authorised target — unattended, behind a policy gate.">
+<meta name="theme-color" content="#0a0b0c">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pride — five agents on a cadence, not a prompt">
+<meta property="og:description" content="Bounded authority beats intelligence: a queue, a policy gate, and five agents that never improvise.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="js/head.js"></script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="brand" href="index.html" aria-label="Maximilian Jatzkowski — home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#0a0b0c"/>
+        <path d="M9 8 L23 21 H41 L55 8 V34 C55 46 45 57 32 57 C19 57 9 46 9 34 Z" fill="#f1f2ed" mask="url(#mj-eyes)"/>
+        <mask id="mj-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff"/>
+          <rect x="21.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+          <rect x="36.5" y="28" width="6" height="12" rx="3" fill="#000"/>
+        </mask>
+        <path d="M28.2 44 H35.8 L32 49.4 Z" fill="#c9f24d"/>
+      </svg>
+      <span class="brand-name">mj</span>
+      <span class="brand-tag">/dev</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html#focus">Focus</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#designs">Designs</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+
+    <div class="head-meta">
+      <span class="clock" id="clock" aria-label="Local time in Germany">—:—</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="pj-hero">
+    <div class="wrap">
+      <a class="crumb" href="index.html#work">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        All work
+      </a>
+
+      <p class="pj-kicker">Agents · Python · SQLite · systemd</p>
+
+      <h1 class="display">Pride<br><em>runs on a clock</em></h1>
+
+      <p class="lead">
+        Most of the work in my lab has a schedule, not a conversation: are the sites up,
+        do the tests still pass, has the target changed. Pride is five agents that do
+        exactly those things on a cadence — while I am asleep — behind a policy file that
+        says what they may do without asking.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <dl class="pj-meta">
+      <div><dt>Agents</dt><dd>5, deterministic</dd></div>
+      <div><dt>Loop</dt><dd>60s tick, systemd user</dd></div>
+      <div><dt>Tests</dt><dd>51, no network</dd></div>
+      <div><dt>Memory</dt><dd>20 MB, capped at 512</dd></div>
+      <div><dt>LLM</dt><dd>None, on purpose</dd></div>
+      <div><dt>Licence</dt><dd>MIT</dd></div>
+    </dl>
+
+    <div class="pj-layout">
+      <article class="prose">
+
+        <h3><span class="num">01</span>Work that has a schedule</h3>
+        <p>
+          I have four tools and one question I kept answering by hand every morning: is
+          anything broken. The answer is not a conversation — it is a check that should
+          have run at 03:00 and written down what it found. So the shape of the thing was
+          never "an agent I chat with"; it was a queue, a clock, and a small set of
+          actions with names.
+        </p>
+
+        <figure class="figure">
+          <img src="assets/pride-web.png" width="1000" height="918" loading="lazy"
+               alt="Pride dashboard: five agent cards with cadence and last run, a work queue with results, and a timestamped event log">
+          <figcaption>Five agents, one queue, one policy. The warn lines are real — the Metasploitable VM was off.</figcaption>
+        </figure>
+
+        <h3><span class="num">02</span>Two phases, not one loop</h3>
+        <p>
+          The daemon ticks every 60 seconds and splits the pass in two:
+        </p>
+        <pre class="code">observe   ask every due agent what needs doing, write it to the queue
+act       take work off the queue, run it in parallel, behind the gate</pre>
+        <p>
+          That split buys three things, and I would not build it without them. A crash
+          while acting never loses the observation, because the queue still holds it.
+          "What is it doing right now" has exactly one answer — a database row. And the
+          policy decision sits <em>between</em> the queue and the outcome, so no agent can
+          route around it by being clever.
+        </p>
+
+        <h3><span class="num">03</span>The gate is the safety model</h3>
+        <p>
+          An unattended system is not dangerous because it is fast. It is dangerous because
+          nobody is reading. Every action an agent can take has a name, and the policy file
+          decides what happens to that name:
+        </p>
+        <pre class="code">allow             run it now
+require_approval  park it, tell me, wait
+forbid            never — and say so in the log
+
+unlisted action   forbidden (an agent cannot invent a capability)</pre>
+        <p>
+          Scanning sits behind approval even though the lab is mine, because a scanner is
+          the one agent here that makes noise on a network. When it asks, the task is
+          parked with state <code class="inline">awaiting_approval</code>, appears in
+          <code class="inline">pride approvals</code>, and does not move until I type
+          <code class="inline">pride approve &lt;id&gt;</code>. A rejection sticks: the
+          task never runs, and the log says why.
+        </p>
+
+        <h3><span class="num">04</span>The bug that taught me the design</h3>
+        <p>
+          Scout scanned the lab target and reported <strong>"0 ports, 0 findings"</strong>.
+          Green. Recorded. The truth was that the Metasploitable VM was switched off.
+        </p>
+        <p>
+          A host that is down and a host with nothing open are identical in the numbers,
+          and only one of them is good news. That is the whole failure mode of an
+          unattended system in one line: it cannot ask "does this look wrong", so the
+          distinctions have to be built in. Zero ports is now a failure with the sentence
+          attached — <em>unreachable or filtered, not a clean result</em> — and there is a
+          test named after it.
+        </p>
+        <p>
+          Six more bugs came out of running it for real rather than reading it: a dry run
+          that consumed the queue so the real run had nothing to do, an approval that never
+          stuck and asked forever, a duplicate insert that surfaced as "database is locked",
+          and a runner that wrote a "last run" for all five agents every tick so every card
+          claimed to have run thirty-eight seconds ago.
+        </p>
+
+        <h3><span class="num">05</span>Twenty-four hours, unattended</h3>
+        <p>
+          It runs as a systemd <em>user</em> service — no root, no daemon user, and it
+          survives logout and reboot:
+        </p>
+        <pre class="code">[Service]
+ExecStart=/home/nox/projects/pride/pride daemon --interval 60
+Restart=on-failure
+MemoryMax=512M
+CPUQuota=50%</pre>
+        <p>
+          The caps matter more than they look. An unattended loop that can eat the machine
+          is a denial of service with extra steps, and the failure mode of "it was fine
+          until it wasn't" always starts with no limit.
+        </p>
+
+        <h3><span class="num">06</span>What it deliberately does not do</h3>
+        <ul>
+          <li><strong>No LLM.</strong> These agents run a tool, parse a verdict, compare to
+            last time, record it. Adding a model would make it less predictable without
+            making it more useful — and an unpredictable thing with a path to my tools is
+            not something I want on a timer.</li>
+          <li><strong>No remediation.</strong> It detects, records, and asks. Fixing is a
+            human decision in this design, and the log is the handover.</li>
+          <li><strong>No new capabilities.</strong> Unlisted actions are refused, so the
+            blast radius does not grow while I sleep.</li>
+          <li><strong>No silence that means nothing.</strong> A cycle only logs when it
+            changed something, which makes an empty log a statement you can trust.</li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Try it</span>
+          <p>
+            <a href="https://github.com/Noxwer-beep/pride">github.com/Noxwer-beep/pride</a>
+            — <code class="inline">pip install "pride[ui]"</code>, then
+            <code class="inline">pride init &amp;&amp; pride cycle --dry-run</code>. It
+            drives <a href="vantage.html">Vantage</a> and <a href="warden.html">Warden</a>,
+            and sits under <a href="clowder.html">Clowder</a> as the thing that keeps the
+            data fresh.
+          </p>
+        </div>
+
+        <nav class="pj-nav" aria-label="Project navigation">
+          <a href="clowder.html">← Clowder</a>
+          <a class="next" href="metasploitable.html">Field notes →</a>
+        </nav>
+      </article>
+
+      <aside class="pj-aside" aria-label="Notes">
+        <h4>The five</h4>
+        <ul>
+          <li><b>sentinel · 30m</b>Five sites, three pages, TLS days</li>
+          <li><b>watcher · 15m</b>Warden verdict, names the failures</li>
+          <li><b>auditor · 1h</b>459 tests across five repos</li>
+          <li><b>scout · 6h</b>Quick scan, approval required</li>
+          <li><b>scribe · 24h</b>The digest, from the event log</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Commands</h4>
+        <ul>
+          <li><b>pride status</b>What it is doing</li>
+          <li><b>pride cycle</b>One pass now</li>
+          <li><b>pride approvals</b>What waits for me</li>
+          <li><b>pride policy</b>What may run alone</li>
+          <li><b>pride web</b>Dashboard, :8790</li>
+        </ul>
+
+        <div class="sep"></div>
+
+        <h4>Numbers</h4>
+        <ul>
+          <li><b>51</b>tests, no network</li>
+          <li><b>7</b>bugs found by running it</li>
+          <li><b>20 MB</b>resident, 512 cap</li>
+          <li><b>0</b>actions invented</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <p class="mono">© <span id="year">2026</span> Maximilian Jatzkowski · Germany</p>
+    <p class="mono colophon">
+      Set in Space Grotesk &amp; Instrument Serif · no framework, no tracking
+      <button class="cat-glyph" id="cat-glyph" type="button" aria-label="Release the cat" title="Press c">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 17 18 4l11 7h2l11-7-2 13" fill="currentColor"/>
+          <circle cx="32" cy="26" r="11" fill="currentColor"/>
+          <path d="M20 34c-6 8-6 20-4 26h32c2-6 2-18-4-26z" fill="currentColor"/>
+          <path d="M48 60c9-2 11-12 7-18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </p>
+    <p class="mono"><a href="security.html">Security check</a> · <a href="#main">Back to top ↑</a></p>
+  </div>
+</footer>
+
+<div class="cat-runner" id="cat-runner" aria-hidden="true">
+  <svg viewBox="0 0 84 58">
+    <g fill="currentColor">
+      <path d="M16 36c0-6 5-10 12-10h24c7 0 12 4 12 10v4H16z"/>
+      <circle cx="64" cy="26" r="9"/>
+      <path d="M57 19l-2-10 9 6z"/>
+      <path d="M69 18l7-8 1 10z"/>
+    </g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M25 40v11"/><path d="M33 40v11"/><path d="M56 40v11"/><path d="M63 40v11"/>
+      <path d="M17 31c-7-2-9-9-6-15"/>
+    </g>
+  </svg>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
